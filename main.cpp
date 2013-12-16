@@ -1,5 +1,5 @@
 /*
-* Bartosz Dobrzycki, 4 November 2013
+* Bartosz Dobrzycki, 16 Dec 2013
 *
 * The following example demonstrates how to solve
 * Revolute-Prismatic-Revolute (RPR) robotic manipulator forward kinematics
@@ -13,10 +13,22 @@
 * how to derive an efficient algorithm (used here) that rotates input vector with a quaternion,
 * utilizing the special rule for quaternion multiplication.
 */
-#include <gl\glut.h>
+
+// Linux compilation:
+// g++ main.cpp -lGL -lglut -lGLU -o a.out
+
+#ifdef _WIN32
+    #include <gl\glut.h>
+#elif _WIN64
+    #include <gl\glut.h>
+#elif __linux
+    #include <GL/glut.h>
+#endif
+
 #include <cmath>
 #include <vector>
 #include <iostream>
+#include <algorithm>  // std::min
 
 namespace MathTools
 {
@@ -28,21 +40,6 @@ namespace MathTools
 
   // Function converts angle in radians to angle in degrees.
   inline double Rad2Deg(double rad) { return rad * ONE_EIGHTY_OVER_PI; }
-
-  //////////////////////////////////////////////////////////////////////
-  // Function template that returns minimum of two values.
-  template <typename T>
-  inline const T& minimum(const T& a, const T& b)
-  {
-    return (a < b) ? a : b;
-  }
-  ////////////////////////////////////////////////////////////////////
-  // Function template that returns maximum of two values.
-  template <typename T>
-  inline const T& maximum(const T& a, const T& b)
-  {
-    return (a < b) ? b : a;
-  }
 }
 //////////////////////////////////////////////////////////////////////////
 class Quaternion;
@@ -146,7 +143,7 @@ public:
   {
     // Make sure acos() function parameter is in [-1.0, 1.0] range.
     const double realClamped =
-      (r > 0.0) ? MathTools::minimum(r, 1.0) : MathTools::maximum(r, -1.0);
+      (r > 0.0) ? std::min(r, 1.0) : std::max(r, -1.0);
     return 2.0 * acos(realClamped);
   }
 
@@ -307,7 +304,7 @@ void SimStep (double timeDelta)
 
   // Prismatic joint.
   // Position of B2 frame expressed in local B1 frame.
-  const Vector3 B1dB2(0.0, 4.0*abs(sin(time)), 0.0);
+  const Vector3 B1dB2(0.0, 4.0*std::abs(sin(time)), 0.0);
 
   // Reference frame B1 can rotate about global Z axis,
   // relatively to the global reference frame G.
@@ -368,8 +365,8 @@ void SimStep (double timeDelta)
   lines.push_back(GLLine(GB2, GrP, white));
 
   // Print out joint current angles.
-  std::cout << "RevJ1: angle(DEG): " << MathTools::Rad2Deg(GeB1.GetAngle())
-            << " RevJ2: angle(DEG): " << MathTools::Rad2Deg(B1eB2.GetAngle()) << std::endl;
+  //std::cout << "RevJ1: angle(DEG): " << MathTools::Rad2Deg(GeB1.GetAngle())
+  //          << " RevJ2: angle(DEG): " << MathTools::Rad2Deg(B1eB2.GetAngle()) << std::endl;
 }
 //////////////////////////////////////////////////////////////////////
 void Init(void)
